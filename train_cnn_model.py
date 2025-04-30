@@ -1,28 +1,26 @@
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+import os
 
-# Image parameters
-IMG_SIZE = 128
-BATCH_SIZE = 2
+IMG_SIZE = 224  # MobileNetV2 default input
+BATCH_SIZE = 4
+EPOCHS = 30
 
-# Dataset paths
-TRAIN_PATH = r'C:\Users\user\Desktop\objdetect\dataset\train'
-VAL_PATH = r'C:\Users\user\Desktop\objdetect\dataset\validation'
+# Paths
+TRAIN_PATH = os.path.join("dataset", "train")
+VAL_PATH = os.path.join("dataset", "validation")
+MODEL_SAVE_PATH = "models/mobilenet_face_classifier.keras"
+os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
 
-# Data preprocessing (NO validation split here!)
-train_datagen = ImageDataGenerator(
+# Data Preparation
+train_gen = ImageDataGenerator(
     rescale=1./255,
-    rotation_range=10,
-    width_shift_range=0.1,
-    height_shift_range=0.1,
+    zoom_range=0.2,
     horizontal_flip=True
-)
-
-val_datagen = ImageDataGenerator(rescale=1./255)
-
-train_gen = train_datagen.flow_from_directory(
+).flow_from_directory(
     TRAIN_PATH,
     target_size=(IMG_SIZE, IMG_SIZE),
     batch_size=BATCH_SIZE,
@@ -30,35 +28,37 @@ train_gen = train_datagen.flow_from_directory(
     shuffle=True
 )
 
-val_gen = val_datagen.flow_from_directory(
+val_gen = ImageDataGenerator(rescale=1./255).flow_from_directory(
     VAL_PATH,
     target_size=(IMG_SIZE, IMG_SIZE),
     batch_size=BATCH_SIZE,
     class_mode='categorical'
 )
 
-# CNN Model
-model = Sequential([
-    tf.keras.layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3)),
-    Conv2D(32, (3, 3), activation='relu'),
-    MaxPooling2D(2, 2),
-    Conv2D(64, (3, 3), activation='relu'),
-    MaxPooling2D(2, 2),
-    Flatten(),
-    Dense(64, activation='relu'),
-    Dense(train_gen.num_classes, activation='softmax')
-])
+# Load Pretrained Model
+base_model = MobileNetV2(include_top=False, input_shape=(IMG_SIZE, IMG_SIZE, 3), weights='imagenet')
+base_model.trainable = False  # Freeze base
 
-# Compile
+x = base_model.output
+x = GlobalAveragePooling2D()(x)
+x = Dropout(0.5)(x)
+outputs = Dense(train_gen.num_classes, activation='softmax')(x)
+model = Model(inputs=base_model.input, outputs=outputs)
+
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-# Train
-model.fit(
+callbacks = [
+    EarlyStopping(patience=5, monitor='val_loss', restore_best_weights=True),
+    ModelCheckpoint(MODEL_SAVE_PATH, save_best_only=True)
+]
+
+history = model.fit(
     train_gen,
-    epochs=25,
-    validation_data=val_gen
+    validation_data=val_gen,
+    epochs=EPOCHS,
+    callbacks=callbacks,
+    verbose=1
 )
 
-# Save the model
-model.save('face_classifier.h5')
-print("✅ Model trained and saved as face_classifier.h5")
+model.save(MODEL_SAVE_PATH)
+print(f"Transfer Learning model saved at {MODEL_SAVE_PATH}")
