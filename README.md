@@ -37,10 +37,3 @@ Run real-time detection using your webcam:
 
 ```bash
 python yolo_detect.py --model my_model.pt --source 0 --resolution 640x480
-
-Arguments
---model: Path to the YOLOv11 .pt weights file (trained on your custom dataset)
-
---source: Source for video input (0 for webcam, or path to video/image)
-
---resolution: Input resolution for the YOLOv11 model (default: 640x480)
