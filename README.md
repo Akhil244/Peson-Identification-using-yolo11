@@ -15,3 +15,7 @@ A real-time **Person Recognition System** built using **YOLOv11** trained on a *
 - Webcam integration (`--source 0`)
 - Detects multiple known individuals
 - Flags unrecognized persons
+
+To Run the main file:
+
+python yolo_detect.py --model my_model.pt --source 0 --resolution 640x480
