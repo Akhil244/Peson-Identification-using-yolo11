@@ -24,14 +24,18 @@ Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/yourusername/Person-Identification-System.git
+
+```bash
 cd Person-Identification-System
+
+```bash
 pip install -r requirements.txt
 
 
 Run real-time detection using your webcam:
 
-bash
 
+```bash
 python yolo_detect.py --model my_model.pt --source 0 --resolution 640x480
 
 Arguments
