@@ -2,7 +2,8 @@
 
 A real-time **Person Recognition System** built using **YOLOv11** trained on a **custom dataset**. The system detects and identifies known individuals from a webcam feed. If the person is not recognized, they are flagged as "Unknown".
 
-![Demo Output](https://github.com/user-attachments/assets/fb3024fe-688a-415c-aa3d-23cb42f3cc76)
+![image](https://github.com/user-attachments/assets/7f17c37d-5625-4638-bca2-a4d9fa8d2edd)
+
 
 > **Fig:** Real-time object detection result using YOLOv11.
 
